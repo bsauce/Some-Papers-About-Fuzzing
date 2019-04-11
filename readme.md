@@ -50,12 +50,12 @@ CAB-Fuzz[150]
 
 ### 2-AFLFast_Coverage-based Greybox Fuzzing as Markov Chain-CCS2016
 
-AFLFast—开源，灰盒fuzzing，基于AFL。目标：AFL花大量时间执行高频路径，改进AFL，使其更多的fuzz低频路径。只能提高效率，而不能提高效果。改进AFL的ChooseNext()和AssignEnergy()函数，ChooseNext()（搜索策略）优先选择较少被选择的或低频路径的输入，变异次数由能量决定，能量调度策略是，被选次数更多的和被执行次数较少的（低频路径）能量较高。
+​	AFLFast—开源，灰盒fuzzing，基于AFL。目标：AFL花大量时间执行高频路径，改进AFL，使其更多的fuzz低频路径。只能提高效率，而不能提高效果。改进AFL的ChooseNext()和AssignEnergy()函数，ChooseNext()（搜索策略）优先选择较少被选择的或低频路径的输入，变异次数由能量决定，能量调度策略是，被选次数更多的和被执行次数较少的（低频路径）能量较高。
 
 ##### 可了解的工具：
 
-QEMU-运行时插桩
-AFLDynInst [20]-将listing 1代码直接插入二进制文件。
+​	QEMU-运行时插桩
+	AFLDynInst [20]-将listing 1代码直接插入二进制文件。
 	[20] Tool. A binary instrumentation. https://github.com/vrtadmin/moow/tree/master/a-dyninst. Accessed:2016-05-13.
 
 
@@ -63,12 +63,13 @@ Markov链规律：状态之间的转换概率tp只取决于当前状态，而不
 
 ### 3-CollAFL：Path Sensitive Fuzzing-SP-2018
 
-亮点是解决hash碰撞问题并保持较低插桩开销，提出3种种子选取策略。
+​	亮点是解决hash碰撞问题并保持较低插桩开销，提出3种种子选取策略。
 
-
-  cur_location = <COMPILE_TIME_RANDOM>;
-  shared_mem[cur_location ^ prev_location]++; 
-  prev_location = cur_location >> 1;
+```c
+cur_location = <COMPILE_TIME_RANDOM>;
+shared_mem[cur_location ^ prev_location]++; 
+prev_location = cur_location >> 1;
+```
 
 （1）解决hash碰撞问题（对于多前驱中的无碰撞块，Fmul(cur,prev)=(cur>>x)^(prev>>y)+z；对于多前驱中的碰撞块，Fhash(cur,prev)=hash_table_lookup(cur,prev)采用离线查表的方式；对于单前驱块，hash值可任意指定，硬编码。），采用贪心搜索确定最优xyz的值，若不能解决碰撞，可将bitmap大小扩充至128K。
 （2）种子选取策略，路径上未探索相邻分支数、未探索孙子数、内存访问操作数大的优先变异，前两种策略效果最好。
@@ -139,7 +140,7 @@ AFLGo——开源，导向型灰盒fuzzing，给距离目标近的种子更多�
 
 ### 1.DIFUZE- Interface Aware Fuzzing for Kernel Drivers-CCS-2017
 
-DIFUZE—开源，需要源码，接口感知型fuzzing—自动静态分析（先编译成LLVM中间码）驱动号（Range Analyziz[52]收集有效驱动号）、驱动文件名、输入参数的结构，已整合到Syzkaller。流程：分析内核源码，收集接口信息（如有效ioctl号、参数结构类型，采用LLVM 3.8实现），然后合成这些结构信息，发送给目标设备。缺点：依赖内核源码
+​	DIFUZE—开源，需要源码，接口感知型fuzzing—自动静态分析（先编译成LLVM中间码）驱动号（Range Analyziz[52]收集有效驱动号）、驱动文件名、输入参数的结构，已整合到Syzkaller。流程：分析内核源码，收集接口信息（如有效ioctl号、参数结构类型，采用LLVM 3.8实现），然后合成这些结构信息，发送给目标设备。缺点：依赖内核源码
 
 缺点：
 
@@ -153,8 +154,7 @@ DIFUZE—开源，需要源码，接口感知型fuzzing—自动静态分析（�
 
 
 （1）使用GCC及LLVM编译kernel，用于静态分析。
-（2）
-识别驱动为处理交互创建的ioctl_handler函数。
+（2）识别驱动为处理交互创建的ioctl_handler函数。
 
 （3）在ioctl_handler函数中分析出设备名信息。
 （4）使用Range Analysis搜索判等表达式识别出command常量。
@@ -165,7 +165,7 @@ DIFUZE—开源，需要源码，接口感知型fuzzing—自动静态分析（�
 
 ### 2.kAFL- Hardware-Assisted Feedback Fuzzing for OS Kernels-USENIX-2017
 
-kAFL—开源，无需源码，windows/linux/MacOS通用，基于AFL、VT-x、PT-Trace。基于硬件辅助反馈方式来fuzz闭源内核。
+​	kAFL—开源，无需源码，windows/linux/MacOS通用，基于AFL、VT-x、PT-Trace。基于硬件辅助反馈方式来fuzz闭源内核。
 	利用两个硬件特性：VT-x虚拟化技术；PT-Trace追踪功能。第一种是用于提高虚拟化效率的技术，相较于传统的模拟化，这种虚拟化使得VMM操作和控制VM时，将更加快速、可靠和安全。第二种PT追踪技术，让CPU可以搜集指令运行的部分上下文信息，这些信息对于推测Fuzz输入来说十分重要。将这两种技术与AFL相结合，实现kAFL。漏洞发现能力和效率都不错，附加开销很小（小于 5%）。
 
 
@@ -190,16 +190,20 @@ VMM中可以分为3个模块KVM，QEMU-PT和kAFL。VM又能分为Target Kernel�
 
 ### 1.AddressSanitizer：A Fast Address Sanity Checker-USENIX-2012
 
-AddressSanitizer:源码插桩，已整合到LLVM 3.1。（http://clang.llvm.org/docs/AddressSanitizer.html）。通过在用户内存（栈变量、全局变量、堆块）周围插入redzones，通过影子内存（1字节影子内存记录8字节用户空间，0表示都可访问，1-7表示前7字节可访问，负数表示不可访问）的记录来检查是否越界和UAF，堆检测是通过替换malloc和free函数。
+​	AddressSanitizer:源码插桩，已整合到LLVM 3.1。（http://clang.llvm.org/docs/AddressSanitizer.html）。通过在用户内存（栈变量、全局变量、堆块）周围插入redzones，通过影子内存（1字节影子内存记录8字节用户空间，0表示都可访问，1-7表示前7字节可访问，负数表示不可访问）的记录来检查是否越界和UAF，堆检测是通过替换malloc和free函数。
 
 ##### ASAN组成：
 
 ​	a.插桩模块：在load/store处检查影子状态shadow state以检测越界访问；在栈/全局对象周围创建毒区poisoned redzones（>=2^3字节，以检测栈/全局变量的上溢和下溢）。
-	ShadowAddr = (Addr >> 3) + Offset;
-	k = *ShadowAddr;
-	if (k != 0 && ((Addr & 7) + AccessSize > k))
-		ReportAndCrash(Addr);
-	b.运行库：替换malloc/free及相关函数，在堆块周围创建毒区redzone(>=32字节，检测堆溢出)，延迟释放块的再使用（检测UAF），错误报告。
+
+```c
+ShadowAddr = (Addr >> 3) + Offset;
+k = *ShadowAddr;
+if (k != 0 && ((Addr & 7) + AccessSize > k))
+	ReportAndCrash(Addr);
+```
+
+​	b.运行库：替换malloc/free及相关函数，在堆块周围创建毒区redzone(>=32字节，检测堆溢出)，延迟释放块的再使用（检测UAF），错误报告。
 	缺点：信息泄露漏洞不能立即被发现，也即未初始化读漏洞。
 	改进想法：释放后标记为不可读写，若再次申请到刚释放的块，仍保持为不可读，只有写入后才能读。
 
@@ -213,7 +217,9 @@ AddressSanitizer:源码插桩，已整合到LLVM 3.1。（http://clang.llvm.org/
 
 ### 2.All You Ever Wanted to Know About DTA and SE-Oakland-2010
 
-​	主要内容是采用SimpIL语言统一描述DTA和SE过程，并描述其中的挑战。DTA的主要挑战是地址也被污染，控制流被污染，去掉不必要的污染，检测被攻击的时机；SE的挑战是符号化内存地址（别名分析），执行路径选择，符号化的跳转地址（如jump tables），处理系统/库调用，优化性能，部分变量符号化mixed execution。DTA和SE主要用于未知漏洞检测；自动输入筛选器生成（入侵检测）；恶意软件分析；测试样例生成。
+​	主要内容是采用SimpIL语言统一描述DTA和SE过程，并描述其中的挑战。DTA的主要挑战是地址也被污染，控制流被污染，去掉不必要的污染，检测被攻击的时机；SE的挑战是符号化内存地址（别名分析），执行路径选择，符号化的跳转地址（如jump tables），处理系统/库调用，优化性能，部分变量符号化mixed execution。	
+
+​	DTA和SE主要用于未知漏洞检测；自动输入筛选器生成（入侵检测）；恶意软件分析；测试样例生成。
 
 
 
