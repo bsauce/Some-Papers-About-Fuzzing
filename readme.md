@@ -15,26 +15,34 @@
 ##### fuzz类：
 
 SAGE[14]
+
 目标：windows x86大型读文件应用（如文件解析器，视频播放器，图片处理器）。
 原理：concolic execution+启发式搜索算法。
 
 Buzzfuzz[46]
+
 首先插桩，然后污点分析，得到影响“攻击点”（如库调用）的输入中的变异位置，接着变异相应位置来生成新的测试用例，最后执行测试用例观察是否崩溃。
 
 TaintScope[36][62]
+
 针对checksum采用污点分析+预定义规则，检测checksum点和热输入字节（能污染目标程序的API），然后变异热字节并修改checksum点以通过完整性校验，最后利用SE+约束求解来修复测试用例的校验值，并使程序崩溃。
 
 ##### 内核fuzz
 
 Trinity[32]
+
 Syzkaller[15]
+
 IOCTL Fuzzer[148]
+
 KernelAFL（kAFL）[149]
+
 CAB-Fuzz[150]
 
 ##### 程序分析技术—基础
 
 污点分析-[105]
+
 符号执行-[39]
 
 ### 1.VUzzer Application-aware Evolutionary Fuzzing-ndss2017
@@ -55,8 +63,10 @@ CAB-Fuzz[150]
 ##### 可了解的工具：
 
 ​	QEMU-运行时插桩
-	AFLDynInst [20]-将listing 1代码直接插入二进制文件。
-	[20] Tool. A binary instrumentation. https://github.com/vrtadmin/moow/tree/master/a-dyninst. Accessed:2016-05-13.
+
+​	AFLDynInst [20]-将listing 1代码直接插入二进制文件。
+
+​	[20] Tool. A binary instrumentation. https://github.com/vrtadmin/moow/tree/master/a-dyninst. Accessed:2016-05-13.
 
 
 Markov链规律：状态之间的转换概率tp只取决于当前状态，而不是当前状态的路径。只能提高效率，而不能提高效果。
@@ -72,6 +82,7 @@ prev_location = cur_location >> 1;
 ```
 
 （1）解决hash碰撞问题（对于多前驱中的无碰撞块，Fmul(cur,prev)=(cur>>x)^(prev>>y)+z；对于多前驱中的碰撞块，Fhash(cur,prev)=hash_table_lookup(cur,prev)采用离线查表的方式；对于单前驱块，hash值可任意指定，硬编码。），采用贪心搜索确定最优xyz的值，若不能解决碰撞，可将bitmap大小扩充至128K。
+
 （2）种子选取策略，路径上未探索相邻分支数、未探索孙子数、内存访问操作数大的优先变异，前两种策略效果最好。
 
 afl-collect和AddressSanitizer[32]（检测缓冲区溢出和UAF）可以对crash进行去重。
@@ -90,8 +101,10 @@ afl-collect和AddressSanitizer[32]（检测缓冲区溢出和UAF）可以对cras
 ### 5.Steelix：Program-State Based Binary Fuzzing-FSE 2017
 
 ​	Steelix—开源，针对binary，基于AFL 2.33b，基于灰盒变异fuzzing，基于代码覆盖。动态插桩是基于Dyninst，静态分析基于IDAPython。
-	模仿VUzzer。
-	目标是解决magic bytes比较问题，使用轻量级的静态分析收集interesting的比较（test/cmp/strcmp），利用二进制插桩获取运行时的比较值、生成运行时的比较进展信息（若匹配到1字节，相邻字节穷举变异的启发式策略）。缺点是不适用于不连续magic bytes和函数返回值比较（如hash值计算）。
+
+​	模仿VUzzer。
+
+​	目标是解决magic bytes比较问题，使用轻量级的静态分析收集interesting的比较（test/cmp/strcmp），利用二进制插桩获取运行时的比较值、生成运行时的比较进展信息（若匹配到1字节，相邻字节穷举变异的启发式策略）。缺点是不适用于不连续magic bytes和函数返回值比较（如hash值计算）。
 
 ### 6-AFLGo-Directed Greybox Fuzzing-CCS2017
 
@@ -102,8 +115,10 @@ AFLGo——开源，导向型灰盒fuzzing，给距离目标近的种子更多�
 ### 7-Hawkeye-Towards a Desired Directed Grey-box Fuzzer-CCS2018
 
 ​	导向性灰盒fuzzer，需要源码+目标点，主要优化了AFLGo（不仅考虑短路径，也考虑能够到达目标点的长路径）。插桩基于LLVM，fuzz基于AFL，指针分析基于程间静态数据流分析工具SVF[41]。
-	3个亮点，1是权衡短路径与长路径的能量分配，覆盖期望集（所有能到达目标点的函数集）上更多函数的种子优先变异，路径越长重合越多，分数越高；2是适应性变异策略，若seed到达目标，细粒度变异增大，粗粒度变异下降；3是新种子优先级排序，分3层存储，若为新种子，且发现新边、能量较高、可到达目标点，则放第1层，否则放第2层，不为新种子则放第3层。
-	未来工作是实现binary fuzzing，目标识别基于二进制代码匹配[947]，静态分析基于IDA[20]，插桩基于Intel Pin[1]。
+
+​	3个亮点，1是权衡短路径与长路径的能量分配，覆盖期望集（所有能到达目标点的函数集）上更多函数的种子优先变异，路径越长重合越多，分数越高；2是适应性变异策略，若seed到达目标，细粒度变异增大，粗粒度变异下降；3是新种子优先级排序，分3层存储，若为新种子，且发现新边、能量较高、可到达目标点，则放第1层，否则放第2层，不为新种子则放第3层。
+
+​	未来工作是实现binary fuzzing，目标识别基于二进制代码匹配[947]，静态分析基于IDA[20]，插桩基于Intel Pin[1]。
 
 
 ​	提出4个导向型fuzzer的特性并进行改进：考虑所有到达目标点的路径，不管长短；平衡静态分析的开销和实用性；合理分配能量；适应性变异策略。
@@ -145,20 +160,25 @@ AFLGo——开源，导向型灰盒fuzzing，给距离目标近的种子更多�
 缺点：
 
 ​	a. 早期就崩了，reboot，导致不能触发更深的功能。
-	b. 不能收集结构的复杂关系，eg，结构的length区域决定了某缓冲区的size。
+
+​	b. 不能收集结构的复杂关系，eg，结构的length区域决定了某缓冲区的size。
 
 未来工作：加上覆盖引导。
+
 想法：VEX中间代码分析windows驱动？
 
 ##### interface recovery主要包含以下步骤：
 
-
 （1）使用GCC及LLVM编译kernel，用于静态分析。
+
 （2）识别驱动为处理交互创建的ioctl_handler函数。
 
 （3）在ioctl_handler函数中分析出设备名信息。
+
 （4）使用Range Analysis搜索判等表达式识别出command常量。
+
 （5）追踪接受了用户态参数的copy_from_user等方法，找到command可以对应的结构体名称，为所有command建立结构体对应表。
+
 （6）搜索整个kernel代码找到所有有效结构体的定义，并转换格式，记录在xml中。
 
 （7）通过interface recovery后，作者能够利用这样有效的信息去生成有效合理的输入。
@@ -166,11 +186,12 @@ AFLGo——开源，导向型灰盒fuzzing，给距离目标近的种子更多�
 ### 2.kAFL- Hardware-Assisted Feedback Fuzzing for OS Kernels-USENIX-2017
 
 ​	kAFL—开源，无需源码，windows/linux/MacOS通用，基于AFL、VT-x、PT-Trace。基于硬件辅助反馈方式来fuzz闭源内核。
-	利用两个硬件特性：VT-x虚拟化技术；PT-Trace追踪功能。第一种是用于提高虚拟化效率的技术，相较于传统的模拟化，这种虚拟化使得VMM操作和控制VM时，将更加快速、可靠和安全。第二种PT追踪技术，让CPU可以搜集指令运行的部分上下文信息，这些信息对于推测Fuzz输入来说十分重要。将这两种技术与AFL相结合，实现kAFL。漏洞发现能力和效率都不错，附加开销很小（小于 5%）。
 
+​	利用两个硬件特性：VT-x虚拟化技术；PT-Trace追踪功能。第一种是用于提高虚拟化效率的技术，相较于传统的模拟化，这种虚拟化使得VMM操作和控制VM时，将更加快速、可靠和安全。第二种PT追踪技术，让CPU可以搜集指令运行的部分上下文信息，这些信息对于推测Fuzz输入来说十分重要。将这两种技术与AFL相结合，实现kAFL。漏洞发现能力和效率都不错，附加开销很小（小于 5%）。
 
 VMM中可以分为3个模块KVM，QEMU-PT和kAFL。VM又能分为Target Kernel和Agent。见Fig1-kAFL总体架构。
-	-KVM中实现了PT追踪功能，负责收集目标内核的运行信息。
+
+​	-KVM中实现了PT追踪功能，负责收集目标内核的运行信息。
 
 ​	-QEMU-PT除了作为KVM和kAFL交互的中间件之外，还有一个很重要的功能就是作为PT data的decoder。
 
@@ -184,15 +205,23 @@ VMM中可以分为3个模块KVM，QEMU-PT和kAFL。VM又能分为Target Kernel�
 ​	Razzer：开源，需要内核源码，针对linux内核数据竞争漏洞。
 
 ​	流程：两个步骤。首先静态分析确定可疑竞争代码RacePair_cand，然后进行动态fuzz测试，分两个阶段，一是单线程fuzz测试（找到能执行两条竞争指令RacePair_cand的输入程序），二是多线程fuzz测试（按照算法将该输入程序转化为多线程程序，通过监管器在竞争指令处断点，用确定性的线程交错技术来控制线程调度，使得在执行多线程程序的时候能并行执行RacePair_cand，找到竞争则获得RacePair_true），若RacePair_true在程序后续执行时导致内核错误，则获得RacePair_harm。输出详细分析report，竞争点—2个内存访问指令的地址+调用栈信息。
-	基于：静态分析基于LLVM pass分析中间码bitcode，SVF指针分析[39]，K-miner[17]；监管器基于QEMU [5]+KVM（kernel-based Virtual Machine硬件加速）。用kCov[3]收集执行路径。
-缺点是没有解决同步机制对多线程fuzzing的影响。
+
+​	基于：静态分析基于LLVM pass分析中间码bitcode，SVF指针分析[39]，K-miner[17]；监管器基于QEMU [5]+KVM（kernel-based Virtual Machine硬件加速）。用kCov[3]收集执行路径。
+
+​	缺点是没有解决同步机制对多线程fuzzing的影响。
 
 未来方向：
+
 （1）优化静态分析
-	本文假设不同内核模块之间很少有竞争，分部分分析导致错过很多〖RacePair〗_cand；提高静态分析的准确性，以识别不会竞争的指令对；可分析同步原语[14,41]（如read_lock(), br_read_lock(), spin_lock_irqsave(), up()，该分析可以排除不会引发竞争的内存对）。
+
+​	本文假设不同内核模块之间很少有竞争，分部分分析导致错过很多〖RacePair〗_cand；提高静态分析的准确性，以识别不会竞争的指令对；可分析同步原语[14,41]（如read_lock(), br_read_lock(), spin_lock_irqsave(), up()，该分析可以排除不会引发竞争的内存对）。
+
 （2）扩展性
-	移植到别的OS，如Windows/MacOSX/FreeBSD。
-	扩展到用户程序分析，用户程序不需要其他变异策略，因为用户程序竞争和内核不一样，只要发生竞争都算作漏洞。
+
+​	移植到别的OS，如Windows/MacOSX/FreeBSD。
+
+​	扩展到用户程序分析，用户程序不需要其他变异策略，因为用户程序竞争和内核不一样，只要发生竞争都算作漏洞。
+
 （3）改进程序变异策略。
 
 # 程序分析技术
