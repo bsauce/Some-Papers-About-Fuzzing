@@ -181,10 +181,19 @@ VMM中可以分为3个模块KVM，QEMU-PT和kAFL。VM又能分为Target Kernel�
 
 ### 3.Razzer：Finding Kernel Race Bugs through Fuzzing-SP-2019
 
-​	静态分析确定可疑竞争代码，动态fuzz测试分两个阶段，一是单线程fuzz测试（找到能执行两条竞争指令的输入程序），二是多线程fuzz测试（通过监管器在竞争指令处断点，确定性的线程交错技术，控制线程调度，提供准确的并行执行信息）。输出详细分析report，竞争点—2个内存访问指令的地址+调用栈信息。
-	静态分析基于LLVM pass分析中间码bitcode，SVF指针分析[39]，K-miner[17]；监管器基于QEMU [5]+KVM（kernel-based Virtual Machine硬件加速）。
+​	Razzer：开源，需要内核源码，针对linux内核数据竞争漏洞。
 
-缺点：没有解决同步机制对多线程fuzzing的影响。
+​	流程：两个步骤。首先静态分析确定可疑竞争代码RacePair_cand，然后进行动态fuzz测试，分两个阶段，一是单线程fuzz测试（找到能执行两条竞争指令RacePair_cand的输入程序），二是多线程fuzz测试（按照算法将该输入程序转化为多线程程序，通过监管器在竞争指令处断点，用确定性的线程交错技术来控制线程调度，使得在执行多线程程序的时候能并行执行RacePair_cand，找到竞争则获得RacePair_true），若RacePair_true在程序后续执行时导致内核错误，则获得RacePair_harm。输出详细分析report，竞争点—2个内存访问指令的地址+调用栈信息。
+	基于：静态分析基于LLVM pass分析中间码bitcode，SVF指针分析[39]，K-miner[17]；监管器基于QEMU [5]+KVM（kernel-based Virtual Machine硬件加速）。用kCov[3]收集执行路径。
+缺点是没有解决同步机制对多线程fuzzing的影响。
+
+未来方向：
+（1）优化静态分析
+	本文假设不同内核模块之间很少有竞争，分部分分析导致错过很多〖RacePair〗_cand；提高静态分析的准确性，以识别不会竞争的指令对；可分析同步原语[14,41]（如read_lock(), br_read_lock(), spin_lock_irqsave(), up()，该分析可以排除不会引发竞争的内存对）。
+（2）扩展性
+	移植到别的OS，如Windows/MacOSX/FreeBSD。
+	扩展到用户程序分析，用户程序不需要其他变异策略，因为用户程序竞争和内核不一样，只要发生竞争都算作漏洞。
+（3）改进程序变异策略。
 
 # 程序分析技术
 
