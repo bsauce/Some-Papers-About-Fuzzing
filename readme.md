@@ -325,6 +325,22 @@ svf框架是基于LLVM所写的，首先用clang将程序源码编译成bit code
 
 ---
 
+# 五、并行fuzz
+
+没有读过，就只放上相关的工具和论文。详细总结点[这里](https://mp.weixin.qq.com/s/wjp-54oevmK4XNAuEi_AnA)。
+
+**1.并行符号化执行**——[Cloud9](http://cloud9.epfl.ch/)
+
+**2.并行黑盒模糊测试**——《Using Grid Computing for Large Scale Fuzzing》
+
+**3.并行灰盒模糊测试**——[**OSS-fuzz**](https://github.com/google/oss-fuzz)、[**ClusterFuzz**](https://github.com/google/clusterfuzz)、[**Springfield**](https://devblogs.microsoft.com/dotnet/project-springfield-a-cloud-service-built-entirely-in-f/)
+
+PAFL: Extend FuzzingOptimizations of Single Mode to Industrial Parallel Mode——FSE2018
+
+EnFuzz: Ensemble Fuzzing withSeed Synchronization among Diverse Fuzzers——USENIX2019
+
+FOT: a versatile,configurable, extensible fuzzing framework——FSE2018
+
+---
+
 有感兴趣的师傅可以联系我啊！！！一起来总结啊！！！
-
-
