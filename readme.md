@@ -325,7 +325,7 @@ svf框架是基于LLVM所写的，首先用clang将程序源码编译成bit code
 
 ---
 
-# 五、并行fuzz
+# 四、并行fuzz
 
 没有读过，就只放上相关的工具和论文。详细总结点[这里](https://mp.weixin.qq.com/s/wjp-54oevmK4XNAuEi_AnA)。
 
