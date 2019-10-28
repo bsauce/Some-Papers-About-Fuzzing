@@ -154,6 +154,125 @@ e. 多次测试-30次取平均
 
 ​	根据N层递归调用来区别漏洞。N：3-5，可快速比对漏洞
 
+###  9. CodeAlchemist: Semantics-Aware Code Generationto Find Vulnerabilities in JavaScript Engines
+
+提出了新的测试用例算法, 模糊测试工具CodeAlchemist-开源.
+
+[CodeAlchmist](https://github.com/SoftSec-KAIST/CodeAlchemist)
+
+ 可以生成任意在语义和语法上正确的JS代码,并有效地产生了导致JS引擎崩溃的测试用例.
+
+CodeAlchemist由三个主要组件组成：
+
+1. SEEDPARSER模块将给定的JS种子分解为一组代码块。
+2. CONSTRAINTANALYZER模块为每个代码块推断出装配约束，并使用计算出的装配约束对它们进行注释，最终构成代码块池。 
+3. ENGINEFUZZER模块根据其组装约束条件从池中组装代码砖，以生成测试用例并针对目标JS引擎执行生成的测试用例。 
+
+**关键方法**: 将JS种子分裂成代码块.每个代码块有一组约束,表示代码块什么时候可以和其他代码块组合. 具体来说, 使用经典数据流分析计算在每个代码块中使用和定义了哪些变量，并动态找出它们的类型。 仅当从每个其他代码块中正确定义了每个代码块中的已使用变量，并且它们的类型匹配时，他们才合并代码块,  互锁代码块时，装配约束有助于种子遵循语言语义 
+
+**优缺点:**  
+
+1. 提出用于模糊JS引擎的语义感知程序集. 可以在模糊测试期间生成随机但仍保留语义的JS代码片段. 不仅关注解决语法错误，而且还针对语义错误，这与任何其他现有的JS引擎模糊测试工具不同.
+
+2. 可将它们拆分为JS expressions的粒度。由于JS表达式本身形成有效的AST，因此它也可以是有效的代码块。与LangFuzz的方法相比，表达式级的片段化所导致的代码块数量更少，但它无法捕获JS代码的高级结构。 
+
+**装配约束**
+
+具体来说，一个装配约束约束两个条件：一个前置条件和一个后置条件。 前提条件是在运行时不会发生运行错误的情况下，为执行代码块而需要定义的一组变量符号及其类型。后置条件描述了在评估代码块之后在代码块的末尾可以使用哪些变量，即定义了哪些变量。 
+
+**CodeAlchemist运作的具体步骤和思路**
+
+- 获取独一无二的代码块:
+
+1. 解析种子生成语法树. 分裂成块
+2. 序列化这些代码块中的标识符,并去掉重复的.
+
+- 计算装配约束
+
+1. 使用静态数据流分析(维护了一个use-def链)指出哪些变量是被使用或者被定义在每个代码块
+2. 重写给定的种子文件,以记录每个代码块所有变量的类型
+3. 通过执行重写的种子,动态地识别每个代码块中使用或定义的所有变量的类型
+4. 用推断的类型信息注释每个代码块,形成组装约束.
+
+- 通过将池中的代码块互锁来生成测试用例
+
+**代码生成算法**
+
+```
+Input: A pool of code bricks (P),
+	   A code brick (B),
+	   The max number of iterations for code generation (imax),
+	   The probability of reinventing block statements (pblk),
+	   The max number of statements in a block body (iblk),
+	   The max nesting level for a block statement (dmax).
+Output: A generated code brick representing a test case
+1 function Generate(P,B,imax,pblk,iblk,dmax)
+2 	for i= 1 to imax do
+3   	if RandProb() < pblk and dmax > 0 then 
+4			 B′ ← GenBlkBrick(P,B,pblk,iblk,dmax-1)
+5		 else 
+6			 B′←PickBrick(P,B)
+7		 B←MergeBricks(B,B′)
+8	 returnB
+9 function GenBlkBrick(P,B,pblk,iblk,dmax)
+10	 B′←PickEmptyBlock(P,B)
+11	 B0←GetDummyBrick(B,B′)
+12	 i←RandInt(iblk)
+13	 B′′←Generate(P,B0, i,pblk,iblk,dmax)
+14	 return MergeBricks(B′,B′′)
+```
+
+
+
+### 10. T-Fuzz: fuzzing by program transformation - S&P 2018
+
+**简介**: 思路比较新奇, 通过删除目标程序中的合理性检查来提高代码覆盖率. 简单来说, 当fuzzer不能再出发新的代码路径时,就会寻找导致输入失败的检查机制,然后这些机制从程序中移除,继续fuzz.利用 基于符号执行的后处理分析来弥补缺点,
+
+**遇到的问题:**
+
+1.  取消检查会导致过高逼近和误报 
+2.  即使是真正的错误，转换后的程序上崩溃对应的输入也可能不会触发原始程序中的错误。 
+
+**解决方法:**  T-Fuzz利用基于符号执行的方法来过滤误报并在原始程序中重现真实的错误. 通过对程序进行转换以及对输入进行变异，可以覆盖更多的代码并发现更多的真实结果。 
+
+**优点:** 与现有的基于符号分析的方法相比，T-Fuzz在两个方面表现出色：
+
+1. 更好的可伸缩性：通过在模糊处理过程中利用基于轻量级动态跟踪的技术，并将重量级符号分析的应用限于检测到的崩溃，标量 T-Fuzz的能力不受绕过复杂输入检查的需求的影响； 
+
+2. 覆盖比较严格检查保护的代码路径的能力 
+
+**本文贡献:** 
+
+1. 证明了模糊测试可以通过转换目标程序而不是采用程序分析技术来更有效地发现错误.
+2. 提出一套使模糊测试可以改变输入和程序的技术，包括（i）自动检测的技术 目标程序中的完整性检查；（ii）进行程序转换以删除检测到的完整性检查；（iii）通过过滤只在转换后的程序中崩溃的误报，在原始程序中重现错误.
+3. 在CGC上评估了T-Fuzz 数据集，LAVA-Mdataset和4个实际程序。证明了该技术的有效性. 发现了3个新错误：两个inmagick / ImageMagicK错误和一个inpdftohtml / libpoppler错误。 
+
+**fuzz的主要步骤:**
+
+**第一步**是比较简单的类似广搜算法. 搜索检查机制, 去掉不必要的检查机制.
+
+**第二步** 程序转换是关键点, 作者一方面考虑了动态二进制指令分析, 静态二进制重写,翻转跳转指令的条件等. 另一方面, 因为条件跳转的翻转条件对二进制文件长度来说是直接并且中性的(不太理解,欢迎各位师傅指点), 从而提供了静态重写的优点, 无需复杂的程序分析技术, 所以只需翻转条件跳转指令的条件即可. 其次这样做保留了程序原有的结构.
+
+**转换程序的算法**也很明确
+
+```
+Input: program: the binary program to transform
+Input: caddrs: the addresses of conditional jumps negated in the input program
+Input: NCC: NCC candidates to remove
+1 transformed_program ← Copy(program)
+2 for e ∈ NCC do
+3	basicblock ← BasicBlock(transformed_program, e.source)
+4	for i ∈ basic_block do
+5		if i is a conditional jump instruction and i.addr /∈ c_addrs then
+6			negate_conditional_jump(program, i.addr)
+7			c_addrs ← c_addrs∪{i.addr}
+8			break
+Output: transformed_program: the generated program with NCC candidate disabled
+Output: caddrs: the locations modified in the transformed program
+```
+
+**第三步**过滤掉误报并重现真实的错误, 概括说,维护两组约束,一组跟踪转换后程序中的约束(CT),一组跟踪原始程序的(CO),初始将其转换为预约束(PC)加到CT,之后如遇到基本块包含否定的条件跳转,则把关联的反向路径约束放入CO,否则将路径跳转放入CO.具体看算法.
+
 ---
 
 # 二、内核fuzz
